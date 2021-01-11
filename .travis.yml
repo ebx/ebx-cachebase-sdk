@@ -1,0 +1,59 @@
+language: java
+dist: trusty
+sudo: false # faster builds
+
+# safelist
+branches:
+  only:
+  - master
+  - dev
+
+env:
+  global:
+    - DEV_BRANCH=dev
+    - RELEASE_BRANCH=master
+    - REPO=ebx/ebx-cachebase-sdk
+    - NO_COLOUR='\033[0m'
+    - RED_COLOUR='\033[0;31m'
+    - GREEN_COLOUR='\033[0;32m'
+
+before_script:
+  - export SOURCE_BRANCH_NAME=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi) 
+  - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import || echo "Failed to import GPG_SECRET_KEYS (probably because this branch is a PR)."
+  - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust || echo "Failed to import GPG_OWNERTRUST (probably because this branch is a PR)."
+  - source Infrastructure/Build-Scripts/export_mvn_version.sh
+  - source Infrastructure/Build-Scripts/validate_build.sh
+
+script:
+  - source Infrastructure/Build-Scripts/build_sdk_travis.sh
+  
+after_failure:
+  - cat target/surefire-reports/*.txt
+
+## Prepare the release for Github
+## Ensure we have a suitable git tag for the release based on the verison number
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "MarcFletcher"
+  - git config --local user.email "marc@echobox.com"
+  - export DEPLOY_TAG=v$MVN_VERSION
+  - git tag $DEPLOY_TAG
+  
+## Create the release in Github
+deploy:
+  provider: releases
+  api_key:
+    secure: <<API_KEY>>
+  file: 
+    - target/ebx-cachebase-sdk-$MVN_VERSION.jar
+    - target/ebx-cachebase-sdk-$MVN_VERSION-javadoc.jar
+    - target/ebx-cachebase-sdk-$MVN_VERSION-sources.jar
+  skip_cleanup: true
+  on:
+    repo: $REPO
+    branch: $RELEASE_BRANCH
+  name: v$MVN_VERSION
+  
+cache:
+  directories:
+    - ~/.m2/repository
