@@ -78,4 +78,9 @@ public class NoOpCacheService extends CacheService {
   protected Object getRawCachedItem(String key) throws Exception {
     return null;
   }
+  
+  @Override
+  public int getNumActiveConnections() {
+    return 0;
+  }
 }

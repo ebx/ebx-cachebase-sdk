@@ -417,7 +417,12 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
     
     return -1;
   }
-
+  
+  @Override
+  public int getNumActiveConnections() {
+    return conPool.getNumActive();
+  }
+  
   /**
    * Primarily for legacy reasons, given we had the memcached implementation first. It
    * interprets any expiry seconds larger than 60*60*24*30 as a unix time. Redis always
