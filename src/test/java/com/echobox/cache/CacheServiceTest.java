@@ -251,5 +251,10 @@ public class CacheServiceTest {
       cacheTimeout = true;
       super.onCacheTimeout();
     }
+  
+    @Override
+    public int getNumActiveConnections() {
+      return 0;
+    }
   }
 }

@@ -106,5 +106,10 @@ public class InMemoryCacheService extends CacheService {
     cache.remove(key);
     return true;
   }
+  
+  @Override
+  public int getNumActiveConnections() {
+    return 0;
+  }
 }
 

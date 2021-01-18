@@ -382,7 +382,12 @@ public class MemcachedCacheService extends CacheService {
       return -1;
     }
   }
-
+  
+  @Override
+  public int getNumActiveConnections() {
+    return 1;
+  }
+  
   /**
    * Optionally log the expiry time 
    * @param key The logging key that is being used
