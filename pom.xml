@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <name>ebx-cachebase-sdk</name>
-  <description>ebx-cachebase-sdk is a...</description>
+  <description>ebx-cachebase-sdk provides a consistent interface for caching.</description>
   <url>https://github.com/ebx/ebx-cachebase-sdk</url>
   
   <groupId>com.echobox</groupId>
@@ -49,7 +49,6 @@
       <organizationUrl>http://www.echobox.com</organizationUrl>
     </developer>
   </developers>
-
   <dependencies>
     <!-- Add the dependencies here -->
     <dependency>
