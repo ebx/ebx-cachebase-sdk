@@ -49,8 +49,8 @@
       <organizationUrl>http://www.echobox.com</organizationUrl>
     </developer>
   </developers>
+  
   <dependencies>
-    <!-- Add the dependencies here -->
     <dependency>
       <groupId>com.echobox</groupId>
       <artifactId>Shutdown</artifactId>
