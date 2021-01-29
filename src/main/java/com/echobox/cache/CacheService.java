@@ -516,4 +516,11 @@ public abstract class CacheService {
       timeoutBucket.tryConsume();
     }
   }
+  
+  /**
+   * Get the current active number of connections
+   *
+   * @return num active connections
+   */
+  public abstract int getNumActiveConnections();
 }

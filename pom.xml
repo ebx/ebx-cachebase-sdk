@@ -6,10 +6,10 @@
   <name>ebx-cachebase-sdk</name>
   <description>ebx-cachebase-sdk provides a consistent interface for caching.</description>
   <url>https://github.com/ebx/ebx-cachebase-sdk</url>
-  
+
   <groupId>com.echobox</groupId>
-  <artifactId>ebx-cachebase-sdk</artifactId>
-  <version>1.1.0</version>
+  <artifactId>CacheBase</artifactId>
+  <version>1.1.1</version>
   <packaging>jar</packaging>
 
   <properties>
