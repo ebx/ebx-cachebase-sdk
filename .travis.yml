@@ -43,7 +43,7 @@ before_deploy:
 deploy:
   provider: releases
   api_key:
-    secure: <<API_KEY>>
+    secure: pwPS9nHVTGhVFogFbXCtj3gFeRKc9Ph/7ojFp6O3IROzcQ7Qkdy0yWbWAarY5KOhN/oDrTioJBqcJe/oNcXC9WipPuYYR9h3okDw27AN2HxrVrW6xQR3mOQwHEs7geN5m1QTnw/7PILy+MM09506mnoAw/UElsZGEg0RfIXYAupYwu6yOCHZ+evlEZ43GnDkcZ1K/j/mRdXZnUqAL4xWc5Yg+5nUHp808Yroc6p060ih58kpTYlUq45F0ZMoM59tFlensqTh/A6pSQWu9s8KJGO1zS6TGLTbONWyYV2upoAnlYzIe6BCpobOYa7jj/4JwdFubZ8dq09iI1JMnedy4Nv3U2CTCfQQmfn42iVLnr/S9+CmXE2i/RC9BaNCQQ08yY5KKPLaHA4kwwk9cS9ujEZq/GNlPzsPihUU2Umf6kL3o0MTamEE9Y5WBjuH/79rc24hH2JN4tFog2x09D8e8XEE65KkpKd+b3cvjvr2U2bnYvBChqZAUYyXT12gn+3+38ooxpJY5Fw6wPxc4iNAa8h/I0MFbHbAiBgjpHN0xV1LPwvEQIcbguGm2nNggDIwRChGLooBhcTNQNQWUfQwSV9GkAe7cw3kAbUf/AlUKEzeL/GfkUjENz+9JB+fMhnwT5Ryc1b19mYchX3ij9nmr3tvNkwf012V8OoJZbMwW7s=
   file: 
     - target/ebx-cachebase-sdk-$MVN_VERSION.jar
     - target/ebx-cachebase-sdk-$MVN_VERSION-javadoc.jar
