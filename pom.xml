@@ -8,7 +8,7 @@
   <url>https://github.com/ebx/ebx-cachebase-sdk</url>
 
   <groupId>com.echobox</groupId>
-  <artifactId>CacheBase</artifactId>
+  <artifactId>ebx-cachebase-sdk</artifactId>
   <version>1.1.1</version>
   <packaging>jar</packaging>
 
@@ -53,7 +53,7 @@
   <dependencies>
     <dependency>
       <groupId>com.echobox</groupId>
-      <artifactId>Shutdown</artifactId>
+      <artifactId>ebx-shutdown-sdk</artifactId>
       <version>1.1.0</version>
     </dependency>
     <!-- memcached client -->
