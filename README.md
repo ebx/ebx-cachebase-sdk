@@ -29,8 +29,9 @@ For our latest stable release use:
 <dependency>
   <groupId>com.echobox</groupId>
   <artifactId>ebx-cachebase-sdk</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
+```
 
 ## Getting in touch
 

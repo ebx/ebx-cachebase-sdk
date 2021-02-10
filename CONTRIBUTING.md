@@ -27,7 +27,7 @@ Pull requests (PR) are a very important way to contribute code to the library. W
 
   for example:
   
-        GH-123 Fixed NPE exception when resvoling an organisation
+        GH-123 Fixed NPE exception when resolving an organisation
 
 * The pull request should be mergeable, i.e. no conflicts.
 * Junit tests required for any functional change must be included.

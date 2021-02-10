@@ -1,2 +1,2 @@
 ebx-cachebase-sdk
-Copyright 2020 Echobox
+Copyright 2021 Echobox
