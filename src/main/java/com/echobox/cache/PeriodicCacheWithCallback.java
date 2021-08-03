@@ -44,13 +44,12 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * Constructor
    *
    * @param cacheService the cache service
-   * @param key cache key
    * @param returnType return type
    * @param defaultCacheSecs period in seconds during which we use cache
    * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
    * if the 'source of truth' supplier isn't working for whatever reason.
    */
-  public PeriodicCacheWithCallback(CacheService cacheService, String key, TypeToken<T> returnType,
+  public PeriodicCacheWithCallback(CacheService cacheService, TypeToken<T> returnType,
       int defaultCacheSecs, int maxCacheSecsOnError) {
     this.returnType = returnType;
     this.defaultCacheSecs = defaultCacheSecs;
