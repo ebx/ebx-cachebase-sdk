@@ -31,13 +31,11 @@ import java.io.Serializable;
  */
 public class PeriodicCacheWithCallback<T extends Serializable> {
   
-  private final int callbackPeriod;
+  private final int defaultCacheSecs;
   
-  private final int callbackErrorTimeout;
+  private final int maxCacheSecsOnError;
   
   private final CacheCallback callback;
-  
-  private final CacheCheckPeriodic cacheCheckPeriodic;
   
   private final CacheService cacheService;
   
@@ -49,19 +47,18 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * @param cacheService the cache service
    * @param key cache key
    * @param returnType return type
-   * @param cachePeriod period in seconds to check cache
-   * @param callbackPeriod period in seconds to check remote data. Also used as cache expiry time
-   * @param callbackTimeout timeout in seconds if callback error occurs during which use old data
+   * @param defaultCacheSecs period in seconds during which we use cache
+   * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
+   * if the 'source of truth' supplier isn't working for whatever reason.
    * @param callback the callback to get the latest data
    */
   public PeriodicCacheWithCallback(CacheService cacheService, String key, TypeToken<T> returnType,
-      int cachePeriod, int callbackPeriod, int callbackTimeout, CacheCallback callback) {
+      int defaultCacheSecs, int maxCacheSecsOnError, CacheCallback callback) {
     this.returnType = returnType;
-    this.callbackPeriod = callbackPeriod;
-    this.callbackErrorTimeout = callbackTimeout;
+    this.defaultCacheSecs = defaultCacheSecs;
+    this.maxCacheSecsOnError = maxCacheSecsOnError;
     this.callback = callback;
     this.cacheService = cacheService;
-    this.cacheCheckPeriodic = new CacheCheckPeriodic(cacheService, key, returnType, cachePeriod);
   }
   
   /**
@@ -70,7 +67,7 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * return cached data. On a successful callback result update the cache
    * @return cached data
    */
-  public T get() {
+  public T get(String key) {
     throw new NotImplementedException();
   }
   
