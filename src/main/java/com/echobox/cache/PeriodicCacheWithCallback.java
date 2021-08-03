@@ -18,7 +18,7 @@
 package com.echobox.cache;
 
 import com.google.gson.reflect.TypeToken;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.Serializable;
 
@@ -69,7 +69,7 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * @return cached data
    */
   public T get(String key) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Coming soon");
   }
   
   /**
@@ -78,7 +78,7 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * @param data cache data
    */
   private void cacheData(String key, T data) {
-    throw new NotImplementedException();
+    throw new NotImplementedException("Coming soon");
   }
   
   public interface CacheCallback<T extends Serializable, E extends Exception> {
