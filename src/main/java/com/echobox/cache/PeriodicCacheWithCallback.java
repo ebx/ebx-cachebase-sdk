@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 /**
  * Periodically executes the callback to get the latest value.
@@ -35,8 +36,6 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
   
   private final int maxCacheSecsOnError;
   
-  private final CacheCallback callback;
-  
   private final CacheService cacheService;
   
   private final TypeToken<T> returnType;
@@ -50,14 +49,12 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * @param defaultCacheSecs period in seconds during which we use cache
    * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
    * if the 'source of truth' supplier isn't working for whatever reason.
-   * @param callback the callback to get the latest data
    */
   public PeriodicCacheWithCallback(CacheService cacheService, String key, TypeToken<T> returnType,
-      int defaultCacheSecs, int maxCacheSecsOnError, CacheCallback callback) {
+      int defaultCacheSecs, int maxCacheSecsOnError) {
     this.returnType = returnType;
     this.defaultCacheSecs = defaultCacheSecs;
     this.maxCacheSecsOnError = maxCacheSecsOnError;
-    this.callback = callback;
     this.cacheService = cacheService;
   }
   
@@ -66,9 +63,10 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * otherwise use callback. If it fails and if it is within callback error timeout period
    * return cached data. On a successful callback result update the cache
    * @param key cache key
+   * @param supplier the data supplier, e.g API call
    * @return cached data
    */
-  public T get(String key) {
+  public T get(String key, Supplier<T> supplier) {
     throw new NotImplementedException("Coming soon");
   }
   
@@ -79,9 +77,5 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    */
   private void cacheData(String key, T data) {
     throw new NotImplementedException("Coming soon");
-  }
-  
-  public interface CacheCallback<T extends Serializable, E extends Exception> {
-    T onCall() throws E;
   }
 }
