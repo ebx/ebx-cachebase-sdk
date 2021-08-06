@@ -9,7 +9,7 @@
 
   <groupId>com.echobox</groupId>
   <artifactId>ebx-cachebase-sdk</artifactId>
-  <version>1.1.1</version>
+  <version>1.2.1</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -55,6 +55,11 @@
       <groupId>com.echobox</groupId>
       <artifactId>ebx-shutdown-sdk</artifactId>
       <version>1.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.echobox</groupId>
+      <artifactId>ebx-unixtime-sdk</artifactId>
+      <version>2.0.0</version>
     </dependency>
     <!-- memcached client -->
     <dependency>
