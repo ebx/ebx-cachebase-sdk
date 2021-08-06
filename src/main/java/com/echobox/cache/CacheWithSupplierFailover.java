@@ -24,13 +24,13 @@ import java.io.Serializable;
 import java.util.function.Supplier;
 
 /**
- * Periodically executes the callback to get the latest value.
- * If it's within the specified period then get the cached value.
- * If the callback fails still get the cached value and update the cache next time
+ * Periodically executes the callback to getWithFailover the latest value.
+ * If it's within the specified period then getWithFailover the cached value.
+ * If the callback fails still getWithFailover the cached value and update the cache next time
  * @param <T> return type of cache object
  * @author Daniyar
  */
-public class PeriodicCacheWithCallback<T extends Serializable> {
+public class CacheWithSupplierFailover<T extends Serializable> {
   
   private final int defaultCacheSecs;
   
@@ -49,7 +49,7 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
    * if the 'source of truth' supplier isn't working for whatever reason.
    */
-  public PeriodicCacheWithCallback(CacheService cacheService, TypeToken<T> returnType,
+  public CacheWithSupplierFailover(CacheService cacheService, TypeToken<T> returnType,
       int defaultCacheSecs, int maxCacheSecsOnError) {
     this.returnType = returnType;
     this.defaultCacheSecs = defaultCacheSecs;
@@ -62,10 +62,10 @@ public class PeriodicCacheWithCallback<T extends Serializable> {
    * otherwise use callback. If it fails and if it is within callback error timeout period
    * return cached data. On a successful callback result update the cache
    * @param key cache key
-   * @param supplier the data supplier, e.g API call
+   * @param sourceOfTruthSupplier the data supplier, e.g API call
    * @return cached data
    */
-  public T get(String key, Supplier<T> supplier) {
+  public T getWithFailover(String key, Supplier<T> sourceOfTruthSupplier) {
     throw new NotImplementedException("Coming soon");
   }
   
