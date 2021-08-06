@@ -24,9 +24,9 @@ import java.io.Serializable;
 import java.util.function.Supplier;
 
 /**
- * Periodically executes the callback to getWithFailover the latest value.
- * If it's within the specified period then getWithFailover the cached value.
- * If the callback fails still getWithFailover the cached value and update the cache next time
+ * Periodically executes the callback to get the latest value.
+ * If it's within the specified period then get the cached value.
+ * If the callback fails still get the cached value and update the cache next time
  * @param <T> return type of cache object
  * @author Daniyar
  */
