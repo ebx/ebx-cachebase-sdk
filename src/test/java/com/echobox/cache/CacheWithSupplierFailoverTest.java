@@ -17,13 +17,18 @@
 
 package com.echobox.cache;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
+
 import com.echobox.time.UnixTime;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.MockedStatic;
-
-import static org.mockito.Mockito.*;
 
 /**
  * Test for CacheWithSupplierFailover
@@ -42,8 +47,8 @@ public class CacheWithSupplierFailoverTest {
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
     
-    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService, TypeToken.get(Long.TYPE),
-        10, 10);
+    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
+        TypeToken.get(Long.TYPE), 10, 10);
     
     long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
     Assert.assertNotEquals(1L, valueFromSourceOfTruth);
@@ -60,8 +65,8 @@ public class CacheWithSupplierFailoverTest {
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
   
-    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService, TypeToken.get(Long.TYPE),
-        40, 10);
+    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
+        TypeToken.get(Long.TYPE), 40, 10);
   
     long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
     // 10 seconds passed
@@ -92,8 +97,8 @@ public class CacheWithSupplierFailoverTest {
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
   
-    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService, TypeToken.get(Long.TYPE),
-        40, 10);
+    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
+        TypeToken.get(Long.TYPE), 40, 10);
   
     long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
     // 10 seconds passed
@@ -104,7 +109,9 @@ public class CacheWithSupplierFailoverTest {
     // The source of truth has failed, so we should get cached value
     unixTime.when(UnixTime::now).thenReturn(260L);
     long value = cache.getWithFailover("Test",
-        () -> { throw new IllegalStateException("API call failed"); });
+        () -> {
+        throw new IllegalStateException("API call failed");
+      });
     Assert.assertEquals(1L, valueFromCache);
     unixTime.close();
   }
@@ -118,8 +125,8 @@ public class CacheWithSupplierFailoverTest {
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
   
-    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService, TypeToken.get(Long.TYPE),
-        40, 10);
+    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
+        TypeToken.get(Long.TYPE), 40, 10);
   
     long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
     // 10 seconds passed
@@ -130,14 +137,18 @@ public class CacheWithSupplierFailoverTest {
     // The source of truth has failed, so we should get cached value
     unixTime.when(UnixTime::now).thenReturn(260L);
     long value = cache.getWithFailover("Test",
-        () -> { throw new IllegalStateException("API call failed"); });
+        () -> {
+        throw new IllegalStateException("API call failed");
+      });
     Assert.assertEquals(1L, valueFromCache);
     
     // The source of truth is failing for long time. Giving up
     unixTime.when(UnixTime::now).thenReturn(300L);
     IllegalStateException exception = Assert.assertThrows(IllegalStateException.class, () -> {
       cache.getWithFailover("Test",
-          () -> { throw new IllegalStateException("API call failed"); });
+          () -> {
+          throw new IllegalStateException("API call failed");
+        });
     });
     
     Assert.assertEquals("We could not get the value from the source of truth for 40 seconds."

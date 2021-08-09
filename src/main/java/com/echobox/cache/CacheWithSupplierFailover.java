@@ -102,8 +102,7 @@ public class CacheWithSupplierFailover<T extends Serializable> {
             throw new IllegalStateException(message, exception);
           }
         } else {
-          // first time error from source of truth. Use cached value
-          value = cacheService.tryGetCachedItem(key, returnType);
+          // first time error from source of truth. Use previously cached value
           isInErrorState = true;
           lastTimeStampSourceOfTruthError = UnixTime.now();
         }
