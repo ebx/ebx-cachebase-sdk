@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import com.echobox.time.UnixTime;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 
@@ -37,11 +38,16 @@ import org.mockito.MockedStatic;
 public class CacheWithSupplierFailoverTest {
   
   private CacheService cacheService;
+  private MockedStatic<UnixTime> unixTime;
+  
+  @Before
+  public void setUp() {
+    cacheService = mock(CacheService.class);
+    unixTime = mockStatic(UnixTime.class);
+  }
   
   @Test
   public void getFromSourceOfTruthTest() {
-    cacheService = mock(CacheService.class);
-    MockedStatic<UnixTime> unixTime = mockStatic(UnixTime.class);
     unixTime.when(UnixTime::now).thenReturn(100L);
     when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(1L);
     when(cacheService.isCacheAvailable()).thenReturn(true);
@@ -49,7 +55,6 @@ public class CacheWithSupplierFailoverTest {
     
     CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
         TypeToken.get(Long.TYPE), 10, 10);
-    
     long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
     Assert.assertNotEquals(1L, valueFromSourceOfTruth);
     Assert.assertEquals(16L, valueFromSourceOfTruth);
@@ -58,8 +63,6 @@ public class CacheWithSupplierFailoverTest {
   
   @Test
   public void getFromCacheTest() {
-    cacheService = mock(CacheService.class);
-    MockedStatic<UnixTime> unixTime = mockStatic(UnixTime.class);
     unixTime.when(UnixTime::now).thenReturn(150L);
     when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(1L); // value from cache
     when(cacheService.isCacheAvailable()).thenReturn(true);
@@ -90,8 +93,6 @@ public class CacheWithSupplierFailoverTest {
   
   @Test
   public void getFromSourceWithFailover() {
-    cacheService = mock(CacheService.class);
-    MockedStatic<UnixTime> unixTime = mockStatic(UnixTime.class);
     unixTime.when(UnixTime::now).thenReturn(150L);
     when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(1L); // value from cache
     when(cacheService.isCacheAvailable()).thenReturn(true);
@@ -118,8 +119,6 @@ public class CacheWithSupplierFailoverTest {
   
   @Test
   public void getFromSourceWithFailoverMaxErrorIntervalReached() {
-    cacheService = mock(CacheService.class);
-    MockedStatic<UnixTime> unixTime = mockStatic(UnixTime.class);
     unixTime.when(UnixTime::now).thenReturn(150L);
     when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(1L); // value from cache
     when(cacheService.isCacheAvailable()).thenReturn(true);
