@@ -135,6 +135,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M5</version>
+        <configuration>
+          <argLine>
+            -Dfile.encoding=UTF-8
+            -javaagent:${settings.localRepository}/org/jmockit/jmockit/1.38/jmockit-1.38.jar
+          </argLine>
+        </configuration>
         <dependencies>
           <dependency>
             <groupId>org.apache.maven.surefire</groupId>
