@@ -63,7 +63,7 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
    * if the 'source of truth' supplier isn't working for whatever reason.
    */
-  public CacheWithSupplierFailover(CacheService cacheService, TypeToken<T> returnType,
+  public  CacheWithSupplierFailover(CacheService cacheService, TypeToken<T> returnType,
       int defaultCacheSecs, int maxCacheSecsOnError) {
     this.returnType = returnType;
     this.defaultCacheSecs = defaultCacheSecs;
@@ -96,8 +96,8 @@ public class CacheWithSupplierFailover<T extends Serializable> {
           if (interval > maxCacheSecsOnError) {
             // maximum error interval has reached
             String message = String.format("We could not get the value from the source"
-                    + " of truth for %d seconds. The maximum wait interval is %d. Giving up",
-                interval, maxCacheSecsOnError);
+                    + " of truth for %d seconds. The maximum wait interval is %d seconds."
+                    + " Giving up", interval, maxCacheSecsOnError);
             logger.error(message, exception);
             throw new IllegalStateException(message, exception);
           }
