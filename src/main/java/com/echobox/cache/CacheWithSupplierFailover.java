@@ -45,10 +45,10 @@ public class CacheWithSupplierFailover<T extends Serializable> {
   private final TypeToken<T> returnType;
   
   // Volatile to ensure if this class is called from multiple threads they all see correct value
-  private volatile long lastTimeStampReadFromSourceOfTruth;
+  private volatile long lastReadFromSourceOfTruthTimeStamp;
   
   // Last time error occurred during the call to source of truth
-  private volatile long lastTimeStampSourceOfTruthError;
+  private volatile long lastSourceOfTruthErrorTimeStamp;
   
   private volatile T value;
   
@@ -63,13 +63,13 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    * @param maxCacheSecsOnError The maximum interval we will continue to use the cached value
    * if the 'source of truth' supplier isn't working for whatever reason.
    */
-  public  CacheWithSupplierFailover(CacheService cacheService, TypeToken<T> returnType,
+  public CacheWithSupplierFailover(CacheService cacheService, TypeToken<T> returnType,
       int defaultCacheSecs, int maxCacheSecsOnError) {
     this.returnType = returnType;
     this.defaultCacheSecs = defaultCacheSecs;
     this.maxCacheSecsOnError = maxCacheSecsOnError;
     this.cacheService = cacheService;
-    this.lastTimeStampReadFromSourceOfTruth = 0L; // Initialise to 0 so
+    this.lastReadFromSourceOfTruthTimeStamp = 0L; // Initialise to 0 so
     // always get the data from source of truth first time
     this.isInErrorState = false;
   }
@@ -84,15 +84,15 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    */
   public T getWithFailover(String key, Supplier<T> sourceOfTruthSupplier) {
     // Only use the supplier once every period, otherwise use cached value
-    if (UnixTime.now() - defaultCacheSecs > lastTimeStampReadFromSourceOfTruth) {
+    if (UnixTime.now() - defaultCacheSecs > lastReadFromSourceOfTruthTimeStamp) {
       try {
         value = sourceOfTruthSupplier.get();
         cacheData(key, value);
-        lastTimeStampReadFromSourceOfTruth = UnixTime.now();
+        lastReadFromSourceOfTruthTimeStamp = UnixTime.now();
         isInErrorState = false;
       } catch (Exception exception) {
         if (isInErrorState) {
-          long interval = UnixTime.now() - lastTimeStampSourceOfTruthError;
+          long interval = UnixTime.now() - lastSourceOfTruthErrorTimeStamp;
           if (interval > maxCacheSecsOnError) {
             // maximum error interval has reached
             String message = String.format("We could not get the value from the source"
@@ -104,7 +104,7 @@ public class CacheWithSupplierFailover<T extends Serializable> {
         } else {
           // first time error from source of truth. Use previously cached value
           isInErrorState = true;
-          lastTimeStampSourceOfTruthError = UnixTime.now();
+          lastSourceOfTruthErrorTimeStamp = UnixTime.now();
         }
       }
     } else {

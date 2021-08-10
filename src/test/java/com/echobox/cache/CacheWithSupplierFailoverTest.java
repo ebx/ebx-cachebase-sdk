@@ -78,7 +78,7 @@ public class CacheWithSupplierFailoverTest {
     CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
         TypeToken.get(Long.TYPE), 40, 10);
   
-    long valueFromSourceOfTruth = cache.getWithFailover("Test", () -> 16L);
+    cache.getWithFailover("Test", () -> 16L);
     // 10 seconds passed
     new MockUp<UnixTime>() {
       @Mock
