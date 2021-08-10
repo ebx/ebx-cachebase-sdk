@@ -17,12 +17,12 @@
 
 package com.echobox.cache;
 
-import com.echobox.time.UnixTime;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -44,16 +44,6 @@ public class CacheWithSupplierFailover<T extends Serializable> {
   
   private final TypeToken<T> returnType;
   
-  // Volatile to ensure if this class is called from multiple threads they all see correct value
-  private volatile long lastReadFromSourceOfTruthTimeStamp;
-  
-  // Last time error occurred during the call to source of truth
-  private volatile long lastSourceOfTruthErrorTimeStamp;
-  
-  private volatile T value;
-  
-  private boolean isInErrorState;
-  
   /**
    * Constructor
    *
@@ -69,9 +59,6 @@ public class CacheWithSupplierFailover<T extends Serializable> {
     this.defaultCacheSecs = defaultCacheSecs;
     this.maxCacheSecsOnError = maxCacheSecsOnError;
     this.cacheService = cacheService;
-    this.lastReadFromSourceOfTruthTimeStamp = 0L; // Initialise to 0 so
-    // always get the data from source of truth first time
-    this.isInErrorState = false;
   }
   
   /**
@@ -84,31 +71,27 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    */
   public T getWithFailover(String key, Supplier<T> sourceOfTruthSupplier) {
     // Only use the supplier once every period, otherwise use cached value
-    if (UnixTime.now() - defaultCacheSecs > lastReadFromSourceOfTruthTimeStamp) {
+    String defaultKey = "default-" + key;
+    String errorKey = "error-" + key;
+    T value = cacheService.tryGetCachedItem(defaultKey, returnType);
+    if (Objects.isNull(value)) {
       try {
         value = sourceOfTruthSupplier.get();
-        cacheData(key, value);
-        lastReadFromSourceOfTruthTimeStamp = UnixTime.now();
-        isInErrorState = false;
+        cacheData(defaultKey, value, defaultCacheSecs);
+        cacheData(errorKey, value, maxCacheSecsOnError);
       } catch (Exception exception) {
-        if (isInErrorState) {
-          long interval = UnixTime.now() - lastSourceOfTruthErrorTimeStamp;
-          if (interval > maxCacheSecsOnError) {
-            // maximum error interval has reached
-            String message = String.format("We could not get the value from the source"
-                    + " of truth for %d seconds. The maximum wait interval is %d seconds."
-                    + " Giving up", interval, maxCacheSecsOnError);
-            logger.error(message, exception);
-            throw new IllegalStateException(message, exception);
-          }
-        } else {
-          // first time error from source of truth. Use previously cached value
-          isInErrorState = true;
-          lastSourceOfTruthErrorTimeStamp = UnixTime.now();
+        // Failed to get the value from source of truth. Use cached value
+        logger.warn("Failed to get the latest value for " + defaultKey
+            + ". Trying to get the cached value");
+        value = cacheService.tryGetCachedItem(errorKey, returnType);
+        if (Objects.isNull(value)) {
+          // We exceeded maximum failover interval
+          String message = String.format("The maximum failover timeout of %d seconds has expired.",
+              maxCacheSecsOnError);
+          logger.error(message);
+          throw new IllegalStateException(message);
         }
       }
-    } else {
-      value = cacheService.tryGetCachedItem(key, returnType);
     }
     return value;
   }
@@ -118,9 +101,9 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    * @param key cache key
    * @param data cache data
    */
-  private void cacheData(String key, T data) {
+  private void cacheData(String key, T data, int expiry) {
     if (cacheService.isCacheAvailable()) {
-      cacheService.trySaveItemToCache(key, defaultCacheSecs, data);
+      cacheService.trySaveItemToCache(key, expiry, data);
     }
   }
 }
