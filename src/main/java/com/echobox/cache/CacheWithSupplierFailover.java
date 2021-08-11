@@ -26,15 +26,19 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Periodically executes the callback to get the latest value.
- * If it's within the specified period then get the cached value.
- * If the callback fails still get the cached value and update the cache next time
+ * The cache that periodically gets the latest value from the provided source of truth.
+ * If source of truth is not available then it will use
+ * cached value for a specified period of time before throwing an error.
  * @param <T> return type of cache object
  * @author Daniyar
  */
 public class CacheWithSupplierFailover<T extends Serializable> {
   
   private static final Logger logger = LoggerFactory.getLogger(CacheWithSupplierFailover.class);
+  
+  private final String defaultCacheKeySuffix = "-default";
+  
+  private final String errorCacheKeySuffix = "-error";
   
   private final int defaultCacheSecs;
   
@@ -71,8 +75,8 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    */
   public T getWithFailover(String key, Supplier<T> sourceOfTruthSupplier) {
     // Only use the supplier once every period, otherwise use cached value
-    String defaultKey = "default-" + key;
-    String errorKey = "error-" + key;
+    String defaultKey = key + defaultCacheKeySuffix;
+    String errorKey = key + errorCacheKeySuffix;
     T value = cacheService.tryGetCachedItem(defaultKey, returnType);
     if (Objects.isNull(value)) {
       try {
@@ -81,15 +85,16 @@ public class CacheWithSupplierFailover<T extends Serializable> {
         cacheData(errorKey, value, maxCacheSecsOnError);
       } catch (Exception exception) {
         // Failed to get the value from source of truth. Use cached value
-        logger.warn("Failed to get the latest value for " + defaultKey
-            + ". Trying to get the cached value");
+        String message = String.format("Failed to get the latest value for %s. "
+            + "Trying to get the failover cached value", key);
+        logger.warn(message);
         value = cacheService.tryGetCachedItem(errorKey, returnType);
         if (Objects.isNull(value)) {
           // We exceeded maximum failover interval
-          String message = String.format("The maximum failover timeout of %d seconds has expired.",
-              maxCacheSecsOnError);
+          message = String.format("The maximum failover timeout of %d seconds has expired for"
+                  + " key %s", maxCacheSecsOnError, key);
           logger.error(message);
-          throw new IllegalStateException(message);
+          throw new SourceOfTruthSupplierException(message, exception);
         }
       }
     }

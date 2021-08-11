@@ -23,10 +23,15 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.echobox.cache.impl.MemcachedCacheService;
+import com.echobox.shutdown.impl.SimpleShutdownMonitor;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test for CacheWithSupplierFailover
@@ -72,8 +77,8 @@ public class CacheWithSupplierFailoverTest {
   @Test
   public void getFromSourceWithFailover() {
 
-    when(cacheService.tryGetCachedItem(eq("default-Test"), any())).thenReturn(null);
-    when(cacheService.tryGetCachedItem(eq("error-Test"), any())).thenReturn(1L);
+    when(cacheService.tryGetCachedItem(eq("Test-default"), any())).thenReturn(null);
+    when(cacheService.tryGetCachedItem(eq("Test-error"), any())).thenReturn(1L);
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
   
@@ -90,22 +95,69 @@ public class CacheWithSupplierFailoverTest {
   @Test
   public void getFromSourceWithFailoverMaxErrorIntervalReached() {
   
-    when(cacheService.tryGetCachedItem(eq("default-Test"), any())).thenReturn(null);
-    when(cacheService.tryGetCachedItem(eq("error-Test"), any())).thenReturn(null);
+    when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(null);
+    when(cacheService.tryGetCachedItem(anyString(), any())).thenReturn(null);
     when(cacheService.isCacheAvailable()).thenReturn(true);
     when(cacheService.trySaveItemToCache(anyString(), eq(10), eq(10))).thenReturn(true);
   
     CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(cacheService,
         TypeToken.get(Long.TYPE), 40, 100);
-
-    IllegalStateException exception = Assert.assertThrows(IllegalStateException.class, () -> {
-      cache.getWithFailover("Test",
-          () -> {
-          throw new IllegalStateException("API call failed");
-        });
-    });
+  
+    SourceOfTruthSupplierException exception = Assert.assertThrows(
+        SourceOfTruthSupplierException.class, () -> {
+        cache.getWithFailover("Test",
+            () -> {
+            throw new IllegalStateException("API call failed");
+          });
+      });
     
     Assert.assertEquals("The maximum failover timeout of 100"
-            + " seconds has expired.", exception.getMessage());
+            + " seconds has expired for key Test", exception.getMessage());
+    Assert.assertEquals("API call failed", exception.getCause().getMessage());
+  }
+  
+  /**
+   * Used to test the CacheWithSupplierFailover with Memcached
+   * Run this when implementation of CacheWithSupplierFailover has changed
+   * @throws Exception
+   */
+  public void getWithSupplierFailoverRealCache() throws Exception {
+    MemcachedCacheService.initialise("localhost", 11211,
+        new SimpleShutdownMonitor());
+    MemcachedCacheService instance = MemcachedCacheService.getInstance();
+    TypeToken<Long> longType = new TypeToken<Long>(){};
+    CountDownLatch waiter = new CountDownLatch(1);
+    CacheWithSupplierFailover<Long> cache = new CacheWithSupplierFailover(instance,
+        longType, 5, 10);
+    
+    long value = cache.getWithFailover("test", () -> 16L);
+    Assert.assertEquals(16, value);
+    
+    // should be getting value from cache this time
+    value = cache.getWithFailover("test", () -> 20L);
+    Assert.assertEquals(16, value);
+    waiter.await(6, TimeUnit.SECONDS);
+    // cache should expire, get latest again
+    value = cache.getWithFailover("test", () -> 15L);
+    Assert.assertEquals(15, value);
+    // source of truth failed, should return cached value
+    waiter.await(5, TimeUnit.SECONDS);
+    value = cache.getWithFailover("test", () -> {
+      throw new IllegalStateException("Failed");
+    });
+    Assert.assertEquals(15, value);
+    // source of truth keeps failing. Maximum failover interval has reached
+    waiter.await(6, TimeUnit.SECONDS);
+    SourceOfTruthSupplierException exception = Assert.assertThrows(
+        SourceOfTruthSupplierException.class, () -> {
+          cache.getWithFailover("Test",
+              () -> {
+                throw new IllegalStateException("API call failed");
+              });
+        });
+  
+    Assert.assertEquals("The maximum failover timeout of 10"
+        + " seconds has expired for key Test", exception.getMessage());
+    Assert.assertEquals("API call failed", exception.getCause().getMessage());
   }
 }
