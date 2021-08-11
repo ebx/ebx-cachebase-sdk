@@ -36,9 +36,9 @@ public class CacheWithSupplierFailover<T extends Serializable> {
   
   private static final Logger logger = LoggerFactory.getLogger(CacheWithSupplierFailover.class);
   
-  private final String defaultCacheKeySuffix = "-default";
+  private static final String DEFAULT_CACHE_KEY_SUFFIX = "-default";
   
-  private final String errorCacheKeySuffix = "-error";
+  private static final String ERROR_CACHE_KEY_SUFFIX = "-error";
   
   private final int defaultCacheSecs;
   
@@ -75,8 +75,8 @@ public class CacheWithSupplierFailover<T extends Serializable> {
    */
   public T getWithFailover(String key, Supplier<T> sourceOfTruthSupplier) {
     // Only use the supplier once every period, otherwise use cached value
-    String defaultKey = key + defaultCacheKeySuffix;
-    String errorKey = key + errorCacheKeySuffix;
+    String defaultKey = key + DEFAULT_CACHE_KEY_SUFFIX;
+    String errorKey = key + ERROR_CACHE_KEY_SUFFIX;
     T value = cacheService.tryGetCachedItem(defaultKey, returnType);
     if (Objects.isNull(value)) {
       try {
