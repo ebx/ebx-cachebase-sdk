@@ -20,8 +20,8 @@ package com.echobox.cache.impl;
 import com.echobox.shutdown.ShutdownMonitor;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.lambdaworks.redis.codec.RedisCodec;
-import com.lambdaworks.redis.codec.StringCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
 
 import java.io.Serializable;
 import java.util.function.Supplier;

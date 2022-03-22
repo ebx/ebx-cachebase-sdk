@@ -19,8 +19,8 @@ package com.echobox.cache.impl;
 
 import com.echobox.shutdown.ShutdownMonitor;
 import com.google.gson.reflect.TypeToken;
-import com.lambdaworks.redis.codec.ByteArrayCodec;
-import com.lambdaworks.redis.codec.RedisCodec;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
 import org.apache.commons.lang3.SerializationUtils;
 
 import java.io.Serializable;
