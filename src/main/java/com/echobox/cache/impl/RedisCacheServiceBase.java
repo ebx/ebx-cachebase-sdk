@@ -25,6 +25,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.codec.RedisCodec;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -49,7 +51,12 @@ import java.util.function.Supplier;
  */
 abstract class RedisCacheServiceBase<S> extends CacheService {
   
-  private static Logger logger = LoggerFactory.getLogger(RedisCacheServiceBase.class);
+  /**
+   * Default topology refresh period
+   */
+  protected static final long DEFAULT_TOPOLOGY_REFRESH_SECS = TimeUnit.MINUTES.toSeconds(1);
+  
+  private static final Logger logger = LoggerFactory.getLogger(RedisCacheServiceBase.class);
   
   /**
    * A locker for keeping things thread safe
@@ -88,17 +95,18 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
 
   /**
    * Initialise a new RedisCacheService using defaults for cacheClusterEndPoint
-   * and cacheClusterPort if either is null.  
-   * 
+   * and cacheClusterPort if either is null.
+   *
    * The CacheService may only be initialised once.
-   * 
+   *
    * @param cacheClusterEndPoint the cache cluster end point
    * @param cacheClusterPort the cache cluster port
-   * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged 
+   * @param topologyPeriodicRefreshSeconds the topology periodic refresh seconds
+   * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged
    * correctly on shutdown
    */
   protected void init(String cacheClusterEndPoint, Integer cacheClusterPort,
-      ShutdownMonitor shutdownMonitor) {
+      Long topologyPeriodicRefreshSeconds, ShutdownMonitor shutdownMonitor) {
 
     if (shutdownMonitor == null) {
       throw new IllegalArgumentException("RedisCacheService cannot be "
@@ -123,8 +131,13 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
           .create(RedisURI.create(this.cacheClusterEndPoint, this.cacheClusterPort));
       
       //Don't validate connections to individual nodes as we may connect to them using private ips
-      ClusterClientOptions options = ClusterClientOptions.builder()
-          .validateClusterNodeMembership(false).build();
+      ClusterTopologyRefreshOptions refreshOptions =
+          ClusterTopologyRefreshOptions.builder().enablePeriodicRefresh(true).refreshPeriod(
+              Duration.ofSeconds(topologyPeriodicRefreshSeconds)).build();
+      
+      ClusterClientOptions options =
+          ClusterClientOptions.builder().validateClusterNodeMembership(false)
+              .topologyRefreshOptions(refreshOptions).build();
       clusterClient.setOptions(options);
       
       conPool = ConnectionPoolSupport
