@@ -1,5 +1,9 @@
 # ebx-cachebase-sdk Changelog
 
+## 1.4.0 (Mar 30, 2023)
+
+* Ensure that the Redis cluster topology is always refreshed and allow the period to be configured
+  
 ## 1.3.0 (Mar 21, 2022)
 
 * Upgrade the dependency `biz.paluch.redis` `lettuce`  to use `io.lettuce` `lettuce-core` which 
