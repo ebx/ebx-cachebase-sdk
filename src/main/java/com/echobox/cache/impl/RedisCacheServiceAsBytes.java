@@ -51,20 +51,38 @@ public class RedisCacheServiceAsBytes extends RedisCacheServiceBase<byte[]> {
   }
   
   /**
-   * Initialise a new RedisCacheService using defaults for cacheClusterEndPoint
-   * and cacheClusterPort if either is null.  
-   * 
+   * Initialise a new RedisCacheService using defaults for clusterEndpoint
+   * and cacheClusterPort if either is null.
+   *
    * The CacheService may only be initialised once.
-   * 
+   *
+   * @param clusterEndpoint the cache cluster end point
+   * @param cacheClusterPort the cache cluster port
+   * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged
+   * correctly on shutdown
+   */
+  public static void initialise(String clusterEndpoint, Integer cacheClusterPort,
+      ShutdownMonitor shutdownMonitor) {
+    initialise(clusterEndpoint, cacheClusterPort, DEFAULT_TOPOLOGY_REFRESH_SECS,
+        shutdownMonitor);
+  }
+  
+  /**
+   * Initialise a new RedisCacheService using defaults for cacheClusterEndPoint
+   * and cacheClusterPort if either is null.
+   *
+   * The CacheService may only be initialised once.
+   *
    * @param cacheClusterEndPoint the cache cluster end point
    * @param cacheClusterPort the cache cluster port
-   * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged 
+   * @param topologyPeriodicRefreshSeconds the topology periodic refresh seconds
+   * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged
    * correctly on shutdown
    */
   public static void initialise(String cacheClusterEndPoint, Integer cacheClusterPort,
-      ShutdownMonitor shutdownMonitor) {
-    ((RedisCacheServiceAsBytes) getInstance())
-        .init(cacheClusterEndPoint, cacheClusterPort, shutdownMonitor);
+      Long topologyPeriodicRefreshSeconds, ShutdownMonitor shutdownMonitor) {
+    getInstance().init(cacheClusterEndPoint, cacheClusterPort, topologyPeriodicRefreshSeconds,
+        shutdownMonitor);
   }
 
   /**
