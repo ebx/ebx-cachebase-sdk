@@ -1,0 +1,67 @@
+version: 2.1
+orbs:
+  gh: circleci/github-cli@2.1.0
+
+workflows:
+  version: 2
+  pr_build:
+    when:
+      not:
+        or:
+          - equal: [ dev, << pipeline.git.branch >> ]
+          - equal: [ master, << pipeline.git.branch >> ]
+    jobs:
+      # Performs a verify build for PRs
+      - validate:
+          context:
+            - Non-sensitive Env Vars
+      - maven_verify:
+          context: Non-sensitive Env Vars
+          requires:
+            - validate
+
+  stage_or_release_build:
+    when:
+      or:
+        - equal: [ dev, << pipeline.git.branch >> ]
+        - equal: [ master, << pipeline.git.branch >> ]
+    jobs:
+      # Deploys to maven central for dev (snapshot) and master builds
+      - validate:
+          context:
+            - Non-sensitive Env Vars
+      - maven_deploy:
+          context: 
+            - Open Source Release Credentials
+            - Non-sensitive Env Vars
+          requires:
+            - validate
+
+jobs:
+  validate:
+    machine:
+      image: ubuntu-2204:2023.02.1
+    steps:
+      - checkout
+      - run: 
+          name: "List installed packages"
+          command: apt list --installed
+      - run:
+          name: "Validate build"
+          command: source buildscripts/validate_build.sh
+  maven_verify:
+    machine:
+      image: ubuntu-2204:2023.02.1
+    steps:
+      - checkout
+      - run:
+          name: "Perform Maven Verify"
+          command: source buildscripts/mvn_verify.sh
+  maven_deploy:
+    machine:
+      image: ubuntu-2204:2023.02.1
+    steps:
+      - checkout
+      - run:
+          name: "Deploy to Maven Central"
+          command: source buildscripts/mvn_deploy.sh
