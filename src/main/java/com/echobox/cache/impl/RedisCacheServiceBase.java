@@ -129,16 +129,21 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
       
       clusterClient = RedisClusterClient
           .create(RedisURI.create(this.cacheClusterEndPoint, this.cacheClusterPort));
-      
+  
+      ClusterClientOptions.Builder optionsBuilder = ClusterClientOptions.builder();
+  
       //Don't validate connections to individual nodes as we may connect to them using private ips
-      ClusterTopologyRefreshOptions refreshOptions =
-          ClusterTopologyRefreshOptions.builder().enablePeriodicRefresh(true).refreshPeriod(
-              Duration.ofSeconds(topologyPeriodicRefreshSeconds)).build();
-      
-      ClusterClientOptions options =
-          ClusterClientOptions.builder().validateClusterNodeMembership(false)
-              .topologyRefreshOptions(refreshOptions).build();
-      clusterClient.setOptions(options);
+      optionsBuilder.validateClusterNodeMembership(false);
+  
+      // If set ensure the topology is refreshed
+      if (topologyPeriodicRefreshSeconds != null) {
+        ClusterTopologyRefreshOptions refreshOptions =
+            ClusterTopologyRefreshOptions.builder().enablePeriodicRefresh(true)
+                .refreshPeriod(Duration.ofSeconds(topologyPeriodicRefreshSeconds)).build();
+        optionsBuilder.topologyRefreshOptions(refreshOptions);
+      }
+  
+      clusterClient.setOptions(optionsBuilder.build());
       
       conPool = ConnectionPoolSupport
           .createGenericObjectPool(() -> clusterClient.connect(createCodec()),

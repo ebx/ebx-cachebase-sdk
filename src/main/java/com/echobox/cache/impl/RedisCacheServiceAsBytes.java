@@ -51,19 +51,19 @@ public class RedisCacheServiceAsBytes extends RedisCacheServiceBase<byte[]> {
   }
   
   /**
-   * Initialise a new RedisCacheService using defaults for cacheClusterEndPoint
+   * Initialise a new RedisCacheService using defaults for clusterEndpoint
    * and cacheClusterPort if either is null.
    *
    * The CacheService may only be initialised once.
    *
-   * @param cacheClusterEndPoint the cache cluster end point
+   * @param clusterEndpoint the cache cluster end point
    * @param cacheClusterPort the cache cluster port
    * @param shutdownMonitor The shutdown monitor we use to ensure that logging is logged
    * correctly on shutdown
    */
-  public static void initialise(String cacheClusterEndPoint, Integer cacheClusterPort,
+  public static void initialise(String clusterEndpoint, Integer cacheClusterPort,
       ShutdownMonitor shutdownMonitor) {
-    initialise(cacheClusterEndPoint, cacheClusterPort, DEFAULT_TOPOLOGY_REFRESH_SECS,
+    initialise(clusterEndpoint, cacheClusterPort, DEFAULT_TOPOLOGY_REFRESH_SECS,
         shutdownMonitor);
   }
   
