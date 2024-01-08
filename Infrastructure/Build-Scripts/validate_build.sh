@@ -23,3 +23,4 @@ if [ "${CIRCLE_BRANCH}" == "${RELEASE_BRANCH}" ] || [ "${CIRCLE_BRANCH}" == "${D
 else
   printf "${GREEN_COLOUR}Building PR #${CIRCLE_PULL_REQUEST##*/} '${CIRCLE_PULL_REQUEST}' from branch ${CIRCLE_BRANCH} (into ${DEV_BRANCH})${NO_COLOUR}\n"
 fi
+
