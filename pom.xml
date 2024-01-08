@@ -9,7 +9,7 @@
 
   <groupId>com.echobox</groupId>
   <artifactId>ebx-cachebase-sdk</artifactId>
-  <version>1.4.0</version>
+  <version>1.4.1</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -72,7 +72,7 @@
     <dependency>
       <groupId>io.lettuce</groupId>
       <artifactId>lettuce-core</artifactId>
-      <version>6.1.8.RELEASE</version>
+      <version>6.3.0.RELEASE</version>
     </dependency>
     <!-- commons-pool2 required by lettuce for connection pooling -->
     <dependency>
