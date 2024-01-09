@@ -1,5 +1,9 @@
 # ebx-cachebase-sdk Changelog
 
+## 1.4.1 (Jan 9, 2024)
+
+* Bump lettuce-core dependency to `6.3.0.RELEASE` for redis 7 support
+
 ## 1.4.0 (Mar 30, 2023)
 
 * Ensure that the Redis cluster topology is always refreshed and allow the period to be configured
