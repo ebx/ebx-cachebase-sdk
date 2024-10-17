@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -310,6 +311,121 @@ public abstract class CacheService {
   }
   
   /**
+   * Try to retrieve an item that has been serialised using
+   * org.apache.commons.lang3.SerializationUtils to byte[] from the cache with the time to
+   * expiry using the provided key and type token
+   * @param <T> The FINAL type of this item
+   * @param key The key
+   * @param typeToken The type token of the object being retrieved
+   * @return Optional that contains the cached result if it existed
+   */
+  public <T> Optional<CachedResult<T>> tryGetCachedItemFromBytesWithTtl(String key,
+      TypeToken<T> typeToken) {
+    
+    Optional<CachedResult<byte[]>> cachedResult =
+        tryGetCachedItemWithTtl(key, new TypeToken<byte[]>() {});
+    
+    if (!cachedResult.isPresent()) {
+      return Optional.empty();
+    }
+    
+    byte[] cachedBytes = cachedResult.get().getValue();
+    if (cachedBytes != null) {
+      try {
+        T typedResult =
+            (T) typeToken.getRawType().cast(SerializationUtils.deserialize(cachedBytes));
+        return Optional.of(new CachedResult<>(typedResult, cachedResult.get().getTtl()));
+      } catch (Exception ex) {
+        logger.error("Failed to cast cached bytes to " + typeToken.toString() + " using key "
+            + key + ". Item will be deleted " + "from the cache.", ex);
+        tryDeleteItemFromCache(key);
+      }
+    }
+    
+    //Return the same as if the cache item does not exist
+    return Optional.empty();
+  }
+  
+  /**
+   * Try to retrieve an item from the cache with the time to live using the provided key and
+   * type token
+   * @param <T> The type of this item
+   * @param key The key
+   * @param typeToken The type token of the object being retrieved
+   * @return Optional that contains the cached result if it existed
+   */
+  public <T> Optional<CachedResult<T>> tryGetCachedItemWithTtl(String key, TypeToken<T> typeToken) {
+    // Use a runtime exception set here to ensure no checked exceptions are thrown since we want
+    // to use an empty set here but also allow for checked exceptions to be thrown when required
+    final Set<Class<? extends RuntimeException>> exceptionsToThrowDirectly = new HashSet<>();
+    
+    return tryGetCachedItemWithTtl(key, typeToken, exceptionsToThrowDirectly);
+  }
+  
+  /**
+   * Try to retrieve an item from the cache with the time to live using the provided key and
+   * type token
+   * @param <T> The type of this item
+   * @param <E> The type of exception to get directly thrown
+   * @param key The key
+   * @param typeToken The type token of the object being retrieved
+   * @param exceptionsToThrowDirectly set of exception types to throw directly
+   * @return An optional containing a cached result if it existed
+   * @throws E the exception
+   */
+  @SuppressWarnings("unchecked")
+  public <T, E extends Exception> Optional<CachedResult<T>> tryGetCachedItemWithTtl(String key,
+      TypeToken<T> typeToken,
+      Set<Class<? extends E>> exceptionsToThrowDirectly) throws E {
+    validateInputs(key, typeToken, exceptionsToThrowDirectly);
+    
+    // Check to see if we might be able to access a cached item
+    if (isCacheAvailable()) {
+      Optional<CachedResult<Object>> rawCachedResult = Optional.empty();
+      
+      // We need to perform the get explicitly so that we can have a timeout
+      long startTime = unixTimeSupplier.get();
+      
+      try {
+        rawCachedResult = getRawCachedItemWithTtl(key);
+      } catch (Exception ex) {
+        if (exceptionsToThrowDirectly.contains(ex.getClass())) {
+          throw (E) ex;
+        }
+        handleException(key, startTime, ex, getDefaultCacheTimeoutSecs(), "retrieve");
+      }
+      
+      try {
+        if (!rawCachedResult.isPresent()) {
+          return Optional.empty();
+        }
+        
+        T result = attemptRawResultCast(rawCachedResult.get().getValue(), typeToken);
+        return Optional.of(new CachedResult<>(result, rawCachedResult.get().getTtl()));
+      } catch (Exception ex) {
+        logger.error("Failed to cast cache item to " + typeToken + " using key "
+            + key + ". Item will be deleted " + "from the cache.", ex);
+        // To ensure the error does not get thrown again for the same key we delete this
+        // cache entry
+        tryDeleteItemFromCache(key);
+        return Optional.empty();
+      }
+      
+    } else {
+      return Optional.empty();
+    }
+  }
+  
+  /**
+   * Attempt to get an uncast Object and the time to live from the cache using the provided key
+   * @param key the key
+   * @return Optional that contains a cached result if it existed
+   * @throws Exception the exception
+   */
+  protected abstract Optional<CachedResult<Object>> getRawCachedItemWithTtl(String key)
+      throws Exception;
+  
+  /**
    * Try to retrieve an item that has been serialised using 
    * org.apache.commons.lang3.SerializationUtils to byte[] from the cache using the provided 
    * key of the provided final type
@@ -366,15 +482,7 @@ public abstract class CacheService {
   @SuppressWarnings("unchecked")
   public <T, E extends Exception> T tryGetCachedItem(String key, TypeToken<T> typeToken,
       Set<Class<? extends E>> exceptionsToThrowDirectly) throws E {
-    if (key == null) {
-      throw new IllegalArgumentException("Provided cache key cannot be null.");
-    }
-    if (typeToken == null) {
-      throw new IllegalArgumentException("Provided typeToken cannot be null.");
-    }
-    if (exceptionsToThrowDirectly == null) {
-      throw new IllegalArgumentException("Provided exceptionsToThrowDirectly cannot be null.");
-    }
+    validateInputs(key, typeToken, exceptionsToThrowDirectly);
 
     // Check to see if we might be able to access a cached item
     if (isCacheAvailable()) {
@@ -411,10 +519,23 @@ public abstract class CacheService {
       return null;
     }
   }
-
+  
+  private <E extends Exception> void validateInputs(String key, TypeToken<?> typeToken,
+      Set<Class<? extends E>> exceptionsToThrowDirectly) {
+    if (key == null) {
+      throw new IllegalArgumentException("Provided cache key cannot be null.");
+    }
+    if (typeToken == null) {
+      throw new IllegalArgumentException("Provided typeToken cannot be null.");
+    }
+    if (exceptionsToThrowDirectly == null) {
+      throw new IllegalArgumentException("Provided exceptionsToThrowDirectly cannot be null.");
+    }
+  }
+  
   /**
    * Attempt to get an uncast Object from the cache using the provided key
-   * @param key 
+   * @param key the key
    * @return An object if one exists for the provided key
    * @throws Exception the exception
    */

@@ -18,6 +18,7 @@
 package com.echobox.cache.impl;
 
 import com.echobox.cache.CacheService;
+import com.echobox.cache.CachedResult;
 import com.echobox.shutdown.ShutdownMonitor;
 import com.google.gson.reflect.TypeToken;
 import io.lettuce.core.RedisFuture;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -172,6 +174,50 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
         }
         initialised = false;
       }
+    }
+  }
+  
+  /**
+   * LUA script to get an item from the cache with the time to live atomically
+   */
+  private static final String GET_WITH_TTL_ATOMIC = "local value = redis.call('GET', KEYS[1]) "
+          + "local ttl = redis.call('TTL', KEYS[1]) "
+          + "return {value, ttl}";
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  public Optional<CachedResult<Object>> getRawCachedItemWithTtl(String key) throws Exception {
+    RedisFuture<S> future = null;
+    try (StatefulRedisClusterConnection<S, S> conn = conPool.borrowObject()) {
+      S[] keyArray = (S[]) new Object[1];
+      keyArray[0] = serialise(key);
+      future = conn.async().eval(GET_WITH_TTL_ATOMIC, ScriptOutputType.MULTI, keyArray);
+      return future.thenApply(result -> {
+        if (result == null) {
+          return Optional.<CachedResult<Object>>empty();
+        }
+        
+        if (!(result instanceof List)) {
+          throw new IllegalStateException("Unexpected result type: " + result.getClass());
+        }
+        List<?> resultList = (List<?>) result;
+        if (resultList.size() < 2) {
+          throw new IllegalStateException("Unexpected result size: " + resultList.size());
+        }
+        Object value = resultList.get(0);
+        if (value == null) {
+          return Optional.<CachedResult<Object>>empty();
+        }
+        
+        Long ttl = ((Number) resultList.get(1)).longValue();
+        
+        return Optional.of(new CachedResult<>(value, ttl));
+      }).toCompletableFuture().get(DEFAULT_CACHE_TIMEOUT_SECS, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      if (future != null) {
+        future.cancel(false);
+      }
+      throw e;
     }
   }
   

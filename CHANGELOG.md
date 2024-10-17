@@ -1,5 +1,11 @@
 # ebx-cachebase-sdk Changelog
 
+## 2.0.0 (Oct 17, 2024)
+* Added support for retrieving items from the cache with their time to live atomically
+* This involved adding a new abstract method `getRawCachedItemWithTtl` to `CacheService`
+* Note that attempting to retrieve items from the cache with their time to live will always 
+  throw an `UnsupportedOperationException` for the `MemcachedCacheService`
+
 ## 1.4.1 (Jan 9, 2024)
 
 * Bump lettuce-core dependency to `6.3.0.RELEASE` for redis 7 support
