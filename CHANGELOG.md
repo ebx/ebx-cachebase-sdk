@@ -1,6 +1,6 @@
 # ebx-cachebase-sdk Changelog
 
-## 2.0.0 (Oct 17, 2024)
+## 2.0.0 (Oct 18, 2024)
 * Added support for retrieving items from the cache with their time to live atomically
 * This involved adding a new abstract method `getRawCachedItemWithTtl` to `CacheService`
 * Note that attempting to retrieve items from the cache with their time to live will always 
