@@ -201,7 +201,7 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
           throw new IllegalStateException("Unexpected result type: " + result.getClass());
         }
         List<?> resultList = (List<?>) result;
-        if (resultList.size() < 2) {
+        if (resultList.size() != 2) {
           throw new IllegalStateException("Unexpected result size: " + resultList.size());
         }
         Object value = resultList.get(0);
@@ -209,7 +209,7 @@ abstract class RedisCacheServiceBase<S> extends CacheService {
           return Optional.<CachedResult<Object>>empty();
         }
         
-        Long ttl = ((Number) resultList.get(1)).longValue();
+        long ttl = ((Number) resultList.get(1)).longValue();
         
         return Optional.of(new CachedResult<>(value, ttl));
       }).toCompletableFuture().get(DEFAULT_CACHE_TIMEOUT_SECS, TimeUnit.SECONDS);

@@ -24,9 +24,9 @@ package com.echobox.cache;
  */
 public class CachedResult<T> {
   private final T value;
-  private final Long ttl;
+  private final long ttl;
   
-  public CachedResult(T value, Long ttl) {
+  public CachedResult(T value, long ttl) {
     this.value = value;
     this.ttl = ttl;
   }
@@ -35,7 +35,7 @@ public class CachedResult<T> {
     return value;
   }
   
-  public Long getTtl() {
+  public long getTtl() {
     return ttl;
   }
 }

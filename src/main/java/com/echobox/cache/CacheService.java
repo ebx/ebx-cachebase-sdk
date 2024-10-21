@@ -375,8 +375,7 @@ public abstract class CacheService {
    */
   @SuppressWarnings("unchecked")
   public <T, E extends Exception> Optional<CachedResult<T>> tryGetCachedItemWithTtl(String key,
-      TypeToken<T> typeToken,
-      Set<Class<? extends E>> exceptionsToThrowDirectly) throws E {
+      TypeToken<T> typeToken, Set<Class<? extends E>> exceptionsToThrowDirectly) throws E {
     validateInputs(key, typeToken, exceptionsToThrowDirectly);
     
     // Check to see if we might be able to access a cached item
