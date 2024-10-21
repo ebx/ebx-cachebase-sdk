@@ -18,6 +18,7 @@
 package com.echobox.cache.impl;
 
 import com.echobox.cache.CacheService;
+import com.echobox.cache.CachedResult;
 import com.echobox.shutdown.ShutdownMonitor;
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
@@ -34,6 +35,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -218,6 +220,19 @@ public class MemcachedCacheService extends CacheService {
    */
   public MemcachedClient getCacheClient() {
     return memcachedClient;
+  }
+  
+  /**
+   * Guaranteed to throw an exception and do nothing as Memcached does not support retrieving
+   * with time to live
+   * @throws UnsupportedOperationException always
+   * @deprecated Unsupported operation
+   */
+  @Override
+  @Deprecated
+  protected Optional<CachedResult<Object>> getRawCachedItemWithTtl(String key) throws Exception {
+    throw new UnsupportedOperationException("This functionality is not supported by this "
+        + "implementation");
   }
   
   @Override

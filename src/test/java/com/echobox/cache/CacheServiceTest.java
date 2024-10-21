@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -142,6 +143,22 @@ public class CacheServiceTest {
       assertFalse(cacheService.cacheTimeout);
     }
   }
+  
+  /**
+   * Test that a set of exceptions can be provided that are thrown directly when retrieving with ttl
+   */
+  @Test
+  public void testThrowsGivenExceptionDirectlyForTtlVersion() {
+    cacheService.exceptionToThrow = new NumberFormatException("Testing");
+    try {
+      cacheService.tryGetCachedItemWithTtl(KEY, TYPE_TOKEN,
+          Sets.newHashSet(IllegalStateException.class, NumberFormatException.class));
+      fail("Expect exception");
+    } catch (NumberFormatException ex) {
+      assertFalse(cacheService.handleExceptionCalled);
+      assertFalse(cacheService.cacheTimeout);
+    }
+  }
 
   /**
    * Test that timeout exceptions are handled and not thrown
@@ -211,6 +228,15 @@ public class CacheServiceTest {
     public boolean tryToIncrementOrDecrementCounterInCacheIfBelowLimit(final String key,
         final int cacheExpiryTimeSeconds, final long limit, final boolean decrement) {
       return false;
+    }
+    
+    @Override
+    protected Optional<CachedResult<Object>> getRawCachedItemWithTtl(final String key)
+        throws Exception {
+      if (exceptionToThrow != null) {
+        throw exceptionToThrow;
+      }
+      return Optional.empty();
     }
 
     @Override
