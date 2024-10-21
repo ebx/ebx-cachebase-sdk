@@ -29,7 +29,7 @@ For our latest stable release use:
 <dependency>
   <groupId>com.echobox</groupId>
   <artifactId>ebx-cachebase-sdk</artifactId>
-  <version>2.0.0</version>
+  <version>1.4.0</version>
 </dependency>
 ```
 
