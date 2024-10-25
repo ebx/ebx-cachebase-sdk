@@ -18,7 +18,9 @@
 package com.echobox.cache.impl;
 
 import com.echobox.cache.CacheService;
+import com.echobox.cache.CachedResult;
 
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
@@ -72,6 +74,11 @@ public class NoOpCacheService extends CacheService {
   @Override
   public boolean tryDeleteItemFromCache(String key) {
     return true;
+  }
+  
+  @Override
+  protected Optional<CachedResult<Object>> getRawCachedItemWithTtl(String key) throws Exception {
+    return Optional.empty();
   }
 
   @Override
