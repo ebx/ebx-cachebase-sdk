@@ -1,5 +1,9 @@
 # ebx-cachebase-sdk Changelog
 
+## 2.0.1 (Mar 31, 2025)
+
+* Bump lettuce-core dependency to `6.5.5.RELEASE`.
+
 ## 2.0.0 (Oct 18, 2024)
 * Added support for retrieving items from the cache with their time to live atomically
 * This involved adding a new abstract method `getRawCachedItemWithTtl` to `CacheService`
