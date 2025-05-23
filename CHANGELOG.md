@@ -1,5 +1,8 @@
 # ebx-cachebase-sdk Changelog
 
+## 2.0.2 (Mar 31, 2025)
+* Bump com.google.code.gson to `2.10.1` to fix security vulnerability.
+
 ## 2.0.1 (Mar 31, 2025)
 
 * Bump lettuce-core dependency to `6.5.5.RELEASE`.
